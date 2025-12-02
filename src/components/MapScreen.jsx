@@ -28,45 +28,18 @@ const MapScreen = ({ tableId, seatId, entrance, userName }) => {
   // 행 사이 통로 y좌표 (테이블 사이의 빈 공간)
   const rowAisles = [100, 240, 400, 560, 720, 860]; // 각 행 사이의 통로
 
-  // 찾아가는 길 계산 (입구 → 테이블, 테이블 사이 통로로만 이동)
+  // 찾아가는 길 계산 - 단순 직선 경로
   const generatePath = () => {
     const startX = entrancePos.x;
     const startY = entrancePos.y;
     const endX = table.x;
     const endY = table.y;
 
-    // 테이블이 몇 번째 열/행인지
-    const colIndex = colXs.indexOf(endX);
-    const rowIndex = rowYs.indexOf(endY);
-
-    // 테이블 오른쪽 가장자리 (경로 끝점)
+    // 테이블 오른쪽 가장자리
     const tableEdgeX = endX + TABLE_RADIUS + 15;
 
-    // 오른쪽 열(1,4,7,10,13): 같은 행의 통로로 이동 후 테이블로
-    if (colIndex === 0) {
-      // 입구에서 위/아래 중 가까운 통로 선택
-      const upperAisle = rowAisles[rowIndex];
-      const lowerAisle = rowAisles[rowIndex + 1];
-      const aisleY = Math.abs(startY - upperAisle) < Math.abs(startY - lowerAisle) ? upperAisle : lowerAisle;
-
-      // 통로에서 접근하는 방향에 따라 테이블 가장자리에서 멈춤
-      const approachFromTop = aisleY < endY;
-      const tableApproachY = approachFromTop ? endY - TABLE_RADIUS - 15 : endY + TABLE_RADIUS + 15;
-
-      return `M ${startX} ${startY} L ${mainAisleX} ${startY} L ${mainAisleX} ${aisleY} L ${tableEdgeX} ${aisleY} L ${tableEdgeX} ${tableApproachY}`;
-    }
-
-    // 중간/왼쪽 열: 행 사이 통로를 이용
-    // 입구 위치에 따라 위에서 접근할지 아래에서 접근할지 결정
-    const upperAisle = rowAisles[rowIndex];
-    const lowerAisle = rowAisles[rowIndex + 1];
-    const aisleY = Math.abs(startY - upperAisle) < Math.abs(startY - lowerAisle) ? upperAisle : lowerAisle;
-
-    // 경로: 입구 → 메인통로 → 행사이통로로 수직이동 → 테이블 열까지 수평이동 → 테이블로 수직이동
-    const approachFromTop = aisleY < endY;
-    const tableApproachY = approachFromTop ? endY - TABLE_RADIUS - 15 : endY + TABLE_RADIUS + 15;
-
-    return `M ${startX} ${startY} L ${mainAisleX} ${startY} L ${mainAisleX} ${aisleY} L ${endX} ${aisleY} L ${endX} ${tableApproachY}`;
+    // 단순 경로: 입구 → 메인통로 → 테이블 높이 → 테이블 옆
+    return `M ${startX} ${startY} L ${mainAisleX} ${startY} L ${mainAisleX} ${endY} L ${tableEdgeX} ${endY}`;
   };
 
   const pathData = generatePath();
