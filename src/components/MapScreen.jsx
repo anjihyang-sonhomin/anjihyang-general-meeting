@@ -49,7 +49,11 @@ const MapScreen = ({ tableId, seatId, entrance, userName }) => {
       const lowerAisle = rowAisles[rowIndex + 1];
       const aisleY = Math.abs(startY - upperAisle) < Math.abs(startY - lowerAisle) ? upperAisle : lowerAisle;
 
-      return `M ${startX} ${startY} L ${mainAisleX} ${startY} L ${mainAisleX} ${aisleY} L ${tableEdgeX} ${aisleY} L ${tableEdgeX} ${endY}`;
+      // 통로에서 접근하는 방향에 따라 테이블 가장자리에서 멈춤
+      const approachFromTop = aisleY < endY;
+      const tableApproachY = approachFromTop ? endY - TABLE_RADIUS - 15 : endY + TABLE_RADIUS + 15;
+
+      return `M ${startX} ${startY} L ${mainAisleX} ${startY} L ${mainAisleX} ${aisleY} L ${tableEdgeX} ${aisleY} L ${tableEdgeX} ${tableApproachY}`;
     }
 
     // 중간/왼쪽 열: 행 사이 통로를 이용
