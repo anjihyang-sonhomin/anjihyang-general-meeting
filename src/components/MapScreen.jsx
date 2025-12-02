@@ -28,18 +28,34 @@ const MapScreen = ({ tableId, seatId, entrance, userName }) => {
   // 행 사이 통로 y좌표 (테이블 사이의 빈 공간)
   const rowAisles = [100, 240, 400, 560, 720, 860]; // 각 행 사이의 통로
 
-  // 찾아가는 길 계산 - 단순 직선 경로
+  // 찾아가는 길 계산
   const generatePath = () => {
     const startX = entrancePos.x;
     const startY = entrancePos.y;
     const endX = table.x;
     const endY = table.y;
 
-    // 테이블 오른쪽 가장자리
-    const tableEdgeX = endX + TABLE_RADIUS + 15;
+    const colIndex = colXs.indexOf(endX);
+    const rowIndex = rowYs.indexOf(endY);
 
-    // 단순 경로: 입구 → 메인통로 → 테이블 높이 → 테이블 옆
-    return `M ${startX} ${startY} L ${mainAisleX} ${startY} L ${mainAisleX} ${endY} L ${tableEdgeX} ${endY}`;
+    // 오른쪽 열(1,4,7,10,13): 메인 통로에서 직선 접근
+    if (colIndex === 0) {
+      const tableEdgeX = endX + TABLE_RADIUS + 15;
+      return `M ${startX} ${startY} L ${mainAisleX} ${startY} L ${mainAisleX} ${endY} L ${tableEdgeX} ${endY}`;
+    }
+
+    // 중간/왼쪽 열: 테이블 사이 통로로 우회
+    // 입구 위치에서 가까운 통로 선택 (테이블 위 or 아래)
+    const upperAisle = rowAisles[rowIndex];     // 테이블 위 통로
+    const lowerAisle = rowAisles[rowIndex + 1]; // 테이블 아래 통로
+    const aisleY = Math.abs(startY - upperAisle) < Math.abs(startY - lowerAisle) ? upperAisle : lowerAisle;
+
+    // 테이블에 위/아래에서 접근
+    const approachFromTop = aisleY < endY;
+    const tableApproachY = approachFromTop ? endY - TABLE_RADIUS - 15 : endY + TABLE_RADIUS + 15;
+
+    // 경로: 입구 → 메인통로 → 통로높이 → 테이블열 → 테이블
+    return `M ${startX} ${startY} L ${mainAisleX} ${startY} L ${mainAisleX} ${aisleY} L ${endX} ${aisleY} L ${endX} ${tableApproachY}`;
   };
 
   const pathData = generatePath();
